@@ -1,0 +1,4 @@
+ALTER TABLE posts
+    DROP COLUMN IF EXISTS tags;
+ALTER TABLE posts
+    DROP COLUMN IF EXISTS updated_at;
