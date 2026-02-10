@@ -21,6 +21,52 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type FollowUser struct {
+	UserID int64 `json:"user_id" validate:"required"`
+}
+
+func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
+	followedUser := getUserFromCtx(r)
+	// Revert back to auth userID from ctx
+	var payload FollowUser
+	if err := ReadJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	ctx := r.Context()
+	err := app.store.Followers.FollowUser(ctx, followedUser.ID, payload.UserID)
+	if err != nil {
+		switch err {
+		case store.ErrConflict:
+			app.conflictResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
+func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
+	followedUser := getUserFromCtx(r)
+	var payload FollowUser
+	if err := ReadJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	ctx := r.Context()
+	err := app.store.Followers.UnfollowUser(ctx, followedUser.ID, payload.UserID)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
 func (app *application) usersContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idParam := chi.URLParam(r, "UserID")
