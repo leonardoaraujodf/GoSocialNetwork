@@ -1,2 +1,2 @@
 # GoSocialNetwork
-Project built on Udemy course "Backend Engineering with Go".
+Project built based on Udemy course "Backend Engineering with Go".
