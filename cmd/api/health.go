@@ -4,6 +4,15 @@ import (
 	"net/http"
 )
 
+// healthCheck godoc
+//
+//	@Summary		Checks the health of the API
+//	@Description	Checks the health of the API
+//	@Tags			health
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	string	"ok"
+//	@Router			/users/health [get]
 func (app *application) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	data := map[string]string{
 		"status":  "ok",

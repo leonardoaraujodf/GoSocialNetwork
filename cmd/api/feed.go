@@ -6,6 +6,27 @@ import (
 	"github.com/leonardoaraujodf/social/internal/store"
 )
 
+// GetUserFeed godoc
+//
+//	@Summary		Fetches the user feed
+//	@Description	Fetches the user feed
+//	@Tags			feed
+//	@Accept			json
+//	@Produce		json
+//	@Param			Limit	query		string	false	"Limit"
+//	@Param			Offset	query		string	false	"Offset"
+//	@Param			Sort	query		string	false	"Sort"
+//	@Param			Tags	query		string	false	"Tags"
+//	@Param			Search	query		string	false	"Search"
+//	@Param			Since	query		string	false	"Since"
+//	@Param			Until	query		string	false	"Until"
+//	@Success		200		{object}	[]store.PostWithMetadata
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
+//
+//	@Security		ApiKeyAuth
+//
+//	@Router			/users/feed [get]
 func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Request) {
 	fq := store.PaginatedFeedQuery{
 		Limit:  20,
