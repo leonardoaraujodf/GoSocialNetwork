@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/leonardoaraujodf/social/internal/db"
 	"github.com/leonardoaraujodf/social/internal/env"
 	"github.com/leonardoaraujodf/social/internal/store"
@@ -37,6 +39,9 @@ func main() {
 		},
 		env:     env.GetString("ENV", "development"),
 		version: version,
+		mail: mailConfig{
+			exp: time.Hour * 24 * 3, // 3 days
+		},
 	}
 	// Logger
 	logger := zap.Must(zap.NewProduction()).Sugar()
