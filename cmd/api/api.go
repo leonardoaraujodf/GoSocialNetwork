@@ -30,12 +30,13 @@ type dbConfig struct {
 }
 
 type config struct {
-	addr    string
-	db      dbConfig
-	env     string
-	version string
-	apiURL  string
-	mail    mailConfig
+	addr        string
+	swaggerAddr string
+	db          dbConfig
+	env         string
+	version     string
+	apiURL      string
+	mail        mailConfig
 }
 
 type mailConfig struct {
@@ -57,7 +58,7 @@ func (app *application) mount() http.Handler {
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
-		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
+		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.swaggerAddr)
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 		r.Route("/posts", func(r chi.Router) {
 			r.Post("/", app.createPostHandler)
@@ -74,6 +75,7 @@ func (app *application) mount() http.Handler {
 			})
 		})
 		r.Route("/users", func(r chi.Router) {
+			r.Put("/activate/{token}", app.activateUserHandler)
 			r.Route("/{UserID}", func(r chi.Router) {
 				r.Use(app.usersContextMiddleware)
 				r.Get("/", app.getUserHandler)
@@ -98,7 +100,8 @@ func (app *application) mount() http.Handler {
 func (app *application) run(mux http.Handler) error {
 	// Docs
 	docs.SwaggerInfo.Version = app.config.version
-	docs.SwaggerInfo.Host = app.config.apiURL
+	//	docs.SwaggerInfo.Host = app.config.apiURL
+	docs.SwaggerInfo.Host = app.config.swaggerAddr
 	docs.SwaggerInfo.BasePath = "/v1"
 	srv := http.Server{
 		Addr:         app.config.addr,
