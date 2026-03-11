@@ -11,6 +11,7 @@ import (
 
 	// "github.com/leonardoaraujodf/social/docs"
 	"github.com/leonardoaraujodf/social/docs"
+	"github.com/leonardoaraujodf/social/internal/mailer"
 	"github.com/leonardoaraujodf/social/internal/store"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -20,6 +21,7 @@ type application struct {
 	store  store.Storage
 	db     dbConfig
 	logger *zap.SugaredLogger
+	mailer mailer.Client
 }
 
 type dbConfig struct {
@@ -37,10 +39,17 @@ type config struct {
 	version     string
 	apiURL      string
 	mail        mailConfig
+	frontendURL string
 }
 
 type mailConfig struct {
-	exp time.Duration
+	sendGrid  sendGridConfig
+	exp       time.Duration
+	fromEmail string
+}
+
+type sendGridConfig struct {
+	apiKey string
 }
 
 func (app *application) mount() http.Handler {
