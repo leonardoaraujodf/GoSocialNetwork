@@ -5,6 +5,7 @@ import (
 
 	"github.com/leonardoaraujodf/social/internal/db"
 	"github.com/leonardoaraujodf/social/internal/env"
+	"github.com/leonardoaraujodf/social/internal/mailer"
 	"github.com/leonardoaraujodf/social/internal/store"
 	"go.uber.org/zap"
 )
@@ -32,6 +33,7 @@ func main() {
 		addr:        env.GetString("ADDR", ":8080"),
 		apiURL:      env.GetString("EXTERNAL_URL", "localhost:8080"),
 		swaggerAddr: env.GetString("SWAGGER_URL", "localhost:8080"),
+		frontendURL: env.GetString("FRONTEND_URL", "http://localhost:4000"),
 		db: dbConfig{
 			addr:         env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/socialnetwork?sslmode=disable"),
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
@@ -41,7 +43,11 @@ func main() {
 		env:     env.GetString("ENV", "development"),
 		version: version,
 		mail: mailConfig{
-			exp: time.Hour * 24 * 3, // 3 days
+			exp:       time.Hour * 24 * 3, // 3 days
+			fromEmail: env.GetString("FROM_EMAIL", ""),
+			sendGrid: sendGridConfig{
+				apiKey: env.GetString("SENDGRID_API_KEY", ""),
+			},
 		},
 	}
 	// Logger
@@ -62,10 +68,15 @@ func main() {
 	logger.Info("Database connection pool established.")
 
 	store := store.NewStorage(db)
+	mailer, err := mailer.NewSendGrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
+	if err != nil {
+		logger.Fatal(err)
+	}
 	app := &application{
 		config: cfg,
 		store:  store,
 		logger: logger,
+		mailer: mailer,
 	}
 
 	mux := app.mount()
