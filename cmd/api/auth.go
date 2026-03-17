@@ -149,6 +149,16 @@ func (app *application) createTokenHandler(w http.ResponseWriter, r *http.Reques
 		}
 		return
 	}
+
+	ok, err := app.store.Users.CheckPassword(user, payload.Password)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+	if !ok {
+		app.unauthorizedErrorResponse(w, r, fmt.Errorf("invalid credentials"))
+		return
+	}
 	claims := jwt.MapClaims{
 		"sub": user.ID,
 		"exp": time.Now().Add(app.config.auth.token.exp).Unix(),

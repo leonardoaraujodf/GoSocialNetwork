@@ -18,6 +18,8 @@ type User struct {
 	Password  password `json:"-"`
 	CreatedAt string   `json:"created_at"`
 	IsActive  bool     `json:is_active`
+	RoleID    int64    `json:"role_id"`
+	Role      *Role    `json:"role"`
 }
 
 var (
@@ -46,8 +48,8 @@ type UserStore struct {
 
 func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 	query := `
-	INSERT INTO users (username, email, password)
-	VALUES ($1, $2, $3) RETURNING id, created_at
+	INSERT INTO users (username, email, password, role_id)
+	VALUES ($1, $2, $3, $4) RETURNING id, created_at
 	`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
@@ -58,6 +60,7 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 		user.Username,
 		user.Email,
 		user.Password.hash,
+		user.Role.ID,
 	).Scan(
 		&user.ID,
 		&user.CreatedAt,
@@ -77,7 +80,7 @@ func (s *UserStore) Create(ctx context.Context, tx *sql.Tx, user *User) error {
 
 func (s *UserStore) GetByID(ctx context.Context, id int64) (*User, error) {
 	query := `
-	SELECT id, username, email, created_at
+	SELECT id, username, email, password, created_at, role_id
 	FROM users
 	WHERE id = $1 AND is_active = true
 	`
@@ -89,7 +92,9 @@ func (s *UserStore) GetByID(ctx context.Context, id int64) (*User, error) {
 		&user.ID,
 		&user.Username,
 		&user.Email,
+		&user.Password.hash,
 		&user.CreatedAt,
+		&user.RoleID,
 	)
 	if err != nil {
 		switch {
@@ -227,7 +232,7 @@ func (s *UserStore) delete(ctx context.Context, tx *sql.Tx, userID int64) error 
 
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-	SELECT id, username, email, password, created_at, is_active
+	SELECT id, username, email, password, created_at, role_id, is_active
 	FROM users
 	WHERE email = $1 AND is_active = true
 	`
@@ -241,6 +246,7 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error)
 		&user.Email,
 		&user.Password.hash,
 		&user.CreatedAt,
+		&user.RoleID,
 		&user.IsActive,
 	)
 	if err != nil {
@@ -252,4 +258,15 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error)
 		}
 	}
 	return user, nil
+}
+
+func (s *UserStore) CheckPassword(user *User, password string) (bool, error) {
+	err := bcrypt.CompareHashAndPassword(user.Password.hash, []byte(password))
+	if err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }

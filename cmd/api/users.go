@@ -129,6 +129,17 @@ func (app *application) usersContextMiddleware(next http.Handler) http.Handler {
 			}
 			return
 		}
+		role, err := app.store.Roles.GetByID(ctx, user.RoleID)
+		if err != nil {
+			switch {
+			case errors.Is(err, store.ErrNotFound):
+				app.notFoundResponse(w, r, err)
+			default:
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+		user.Role = role
 		ctx = context.WithValue(ctx, userCtx, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
