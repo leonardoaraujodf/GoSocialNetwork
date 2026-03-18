@@ -15,12 +15,14 @@ import (
 	"github.com/leonardoaraujodf/social/internal/auth"
 	"github.com/leonardoaraujodf/social/internal/mailer"
 	"github.com/leonardoaraujodf/social/internal/store"
+	"github.com/leonardoaraujodf/social/internal/store/cache"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type application struct {
 	config        config
 	store         store.Storage
+	cacheStorage  cache.Storage
 	db            dbConfig
 	logger        *zap.SugaredLogger
 	mailer        mailer.Client
@@ -44,6 +46,14 @@ type config struct {
 	mail        mailConfig
 	frontendURL string
 	auth        authConfig
+	redisCfg    redisConfig
+}
+
+type redisConfig struct {
+	addr    string
+	pw      string
+	db      int
+	enabled bool
 }
 
 type authConfig struct {
@@ -119,7 +129,7 @@ func (app *application) mount() http.Handler {
 		})
 		r.Route("/users", func(r chi.Router) {
 			r.Put("/activate/{token}", app.activateUserHandler)
-			r.Route("/{UserID}", func(r chi.Router) {
+			r.Route("/{userID}", func(r chi.Router) {
 				r.Use(app.AuthTokenMiddleware)
 
 				r.Get("/", app.getUserHandler)

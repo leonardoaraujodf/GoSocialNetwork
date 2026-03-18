@@ -42,22 +42,42 @@ func (app *application) AuthTokenMiddleware(next http.Handler) http.Handler {
 
 		ctx := r.Context()
 
-		user, err := app.store.Users.GetByID(ctx, userID)
+		user, err := app.getUser(ctx, userID)
 		if err != nil {
 			app.unauthorizedErrorResponse(w, r, err)
 			return
 		}
-
-		role, err := app.store.Roles.GetByID(ctx, user.RoleID)
-		if err != nil {
-			app.unauthorizedErrorResponse(w, r, err)
-			return
-		}
-		user.Role = role
 
 		ctx = context.WithValue(ctx, userCtx, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func (app *application) getUser(ctx context.Context, userID int64) (*store.User, error) {
+	var user *store.User
+	if app.config.redisCfg.enabled {
+		// app.logger.Infow("cache hit", "key", "user", "id", userID)
+		user, err := app.cacheStorage.Users.Get(ctx, userID)
+		if err != nil {
+			return nil, err
+		}
+		if user != nil {
+			return user, nil
+		}
+	}
+
+	// app.logger.Infow("fetching from DB", "id", userID)
+	user, err := app.store.Users.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if app.config.redisCfg.enabled {
+		if err := app.cacheStorage.Users.Set(ctx, user); err != nil {
+			return nil, err
+		}
+	}
+	return user, nil
 }
 
 func (app *application) BasicAuthMiddleware() func(http.Handler) http.Handler {
