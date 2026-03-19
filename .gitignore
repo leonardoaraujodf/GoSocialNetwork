@@ -33,5 +33,4 @@ curl_examples.txt
 # .idea/
 .vscode/
 
-docs/
 bin/
