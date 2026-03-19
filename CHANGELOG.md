@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/leonardoaraujodf/GoSocialNetwork/compare/v1.0.0...v1.1.0) (2026-03-19)
+
+
+### Features
+
+* update api version automatically ([a826e47](https://github.com/leonardoaraujodf/GoSocialNetwork/commit/a826e47345acf2af0f234175d82dc38737284322))
+
 ## 1.0.0 (2026-03-19)
 
 
