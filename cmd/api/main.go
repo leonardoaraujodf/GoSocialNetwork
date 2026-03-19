@@ -1,12 +1,15 @@
 package main
 
 import (
+	"expvar"
+	"runtime"
 	"time"
 
 	"github.com/leonardoaraujodf/social/internal/auth"
 	"github.com/leonardoaraujodf/social/internal/db"
 	"github.com/leonardoaraujodf/social/internal/env"
 	"github.com/leonardoaraujodf/social/internal/mailer"
+	"github.com/leonardoaraujodf/social/internal/ratelimiter"
 	"github.com/leonardoaraujodf/social/internal/store"
 	"github.com/leonardoaraujodf/social/internal/store/cache"
 	"github.com/redis/go-redis/v9"
@@ -69,6 +72,11 @@ func main() {
 				iss:    "gophersocial",
 			},
 		},
+		rateLimiter: ratelimiter.Config{
+			RequestsPerTimeFrame: env.GetInt("RATE_LIMITER_REQUESTS_COUNT", 20),
+			TimeFrame:            time.Second * 5,
+			Enabled:              env.GetBool("RATE_LIMITER_ENABLED", true),
+		},
 	}
 	// Logger
 	logger := zap.Must(zap.NewProduction()).Sugar()
@@ -92,7 +100,14 @@ func main() {
 	if cfg.redisCfg.enabled {
 		rdb = cache.NewRedisClient(cfg.redisCfg.addr, cfg.redisCfg.pw, cfg.redisCfg.db)
 		logger.Info("Redis cache connection established.")
+		defer rdb.Close()
 	}
+
+	// Rate Limiter
+	ratelimiter := ratelimiter.NewFixedWindowRateLimiter(
+		cfg.rateLimiter.RequestsPerTimeFrame,
+		cfg.rateLimiter.TimeFrame,
+	)
 
 	store := store.NewStorage(db)
 	cacheStorage := cache.NewRedisStorage(rdb)
@@ -109,7 +124,16 @@ func main() {
 		logger:        logger,
 		mailer:        mailer,
 		authenticator: jwtAuthenticator,
+		rateLimiter:   ratelimiter,
 	}
+
+	expvar.NewString("version").Set(version)
+	expvar.Publish("database", expvar.Func(func() any {
+		return db.Stats()
+	}))
+	expvar.Publish("goroutines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}))
 
 	mux := app.mount()
 	logger.Fatal(app.run(mux))

@@ -7,12 +7,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/leonardoaraujodf/social/internal/auth"
+	"github.com/leonardoaraujodf/social/internal/ratelimiter"
 	"github.com/leonardoaraujodf/social/internal/store"
 	"github.com/leonardoaraujodf/social/internal/store/cache"
 	"go.uber.org/zap"
 )
 
-func newTestApplication(t *testing.T) *application {
+func newTestApplication(t *testing.T, cfg config) *application {
 	t.Helper()
 	logger := zap.Must(zap.NewProduction()).Sugar()
 	// logger := zap.NewNop().Sugar()
@@ -20,11 +21,16 @@ func newTestApplication(t *testing.T) *application {
 	mockCacheStore := cache.NewMockStore()
 
 	testAuth := &auth.TestAuthenticator{}
+	rateLimiter := ratelimiter.NewFixedWindowRateLimiter(
+		cfg.rateLimiter.RequestsPerTimeFrame,
+		cfg.rateLimiter.TimeFrame)
 	return &application{
 		logger:        logger,
 		store:         mockStore,
 		cacheStorage:  mockCacheStore,
 		authenticator: testAuth,
+		config:        cfg,
+		rateLimiter:   rateLimiter,
 	}
 }
 
