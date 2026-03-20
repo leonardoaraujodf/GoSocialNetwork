@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/leonardoaraujodf/GoSocialNetwork/compare/v1.1.0...v1.1.1) (2026-03-20)
+
+
+### Bug Fixes
+
+* add test coverage for follow endpoint (includes chi param fix) ([3471cfd](https://github.com/leonardoaraujodf/GoSocialNetwork/commit/3471cfd835673ccbb94a3ee5ef75e6ae9fbfdf51))
+* Fix README.md ([9ba7fd7](https://github.com/leonardoaraujodf/GoSocialNetwork/commit/9ba7fd763553f66c891fc2c403511f79c3af59f9))
+
 ## [1.1.0](https://github.com/leonardoaraujodf/GoSocialNetwork/compare/v1.0.0...v1.1.0) (2026-03-19)
 
 
