@@ -1,10 +1,47 @@
 # GoSocialNetwork
-Project built based on Udemy course "Backend Engineering with Go".
 
-## Benchmarking the usage of redis
+A Go-based social network API built as a learning project.
 
-For example, for the users endpoint, just run the following command, enabling and then disabling redis through `REDIS_ENABLED` environment variable.
+## Features
 
+- User authentication (JWT) and user management
+- Follow/unfollow functionality
+- Posts with comments
+- Rate limiting
+- Redis caching (toggleable via `REDIS_ENABLED`)
+- Email notifications (SendGrid)
+
+## Tech Stack
+
+Go, PostgreSQL, Redis, chi router, zap logging, Swagger docs
+
+## Quick Start
+
+```bash
+# Run migrations
+make migrate-up
+
+# Seed database
+make seed
+
+# Start server
+air
 ```
-npx autocannon http://192.168.0.5:8080/v1/users/107 --connections 50 --duration 5 -H "Authorization: Bearer <token>"
+
+## API Docs
+
+Swagger UI available at `http://localhost:8080/v1/swagger/`
+
+## Testing
+
+```bash
+make test
+```
+
+## Benchmarking
+
+```bash
+REDIS_ENABLED=true npx autocannon http://localhost:8080/v1/users/1 \
+  --connections 50 --duration 5 \
+  -H "Authorization: Bearer <token>"
 ```
