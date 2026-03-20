@@ -15,8 +15,8 @@ import (
 
 func newTestApplication(t *testing.T, cfg config) *application {
 	t.Helper()
-	logger := zap.Must(zap.NewProduction()).Sugar()
-	// logger := zap.NewNop().Sugar()
+	// logger := zap.Must(zap.NewProduction()).Sugar()
+	logger := zap.NewNop().Sugar()
 	mockStore := store.NewMockStore()
 	mockCacheStore := cache.NewMockStore()
 

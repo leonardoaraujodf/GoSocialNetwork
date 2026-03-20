@@ -16,7 +16,8 @@ func TestRateLimiterMiddleware(t *testing.T) {
 			TimeFrame:            time.Second * 5,
 			Enabled:              true,
 		},
-		addr: ":8080",
+		addr:      ":8080",
+		chiLogger: false,
 	}
 	app := newTestApplication(t, cfg)
 	ts := httptest.NewServer(app.mount())

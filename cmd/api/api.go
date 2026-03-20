@@ -55,6 +55,7 @@ type config struct {
 	auth        authConfig
 	redisCfg    redisConfig
 	rateLimiter ratelimiter.Config
+	chiLogger   bool
 }
 
 type redisConfig struct {
@@ -95,7 +96,9 @@ func (app *application) mount() *chi.Mux {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	if app.config.chiLogger {
+		r.Use(middleware.Logger)
+	}
 	r.Use(middleware.Recoverer)
 	// Basic CORS
 	// for more ideas, see: https://developer.github.com/v3/#cross-origin-resource-sharing

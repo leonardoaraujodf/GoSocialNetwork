@@ -8,7 +8,8 @@ import (
 
 func NewMockStore() Storage {
 	return Storage{
-		Users: &MockUserStore{},
+		Users:     &MockUserStore{},
+		Followers: &MockFollowersStore{},
 	}
 }
 
@@ -19,7 +20,7 @@ func (m *MockUserStore) Create(ctx context.Context, tx *sql.Tx, u *User) error {
 }
 
 func (m *MockUserStore) GetByID(ctx context.Context, id int64) (*User, error) {
-	return nil, nil
+	return &User{ID: id, Username: "testuser", Email: "test@test.com"}, nil
 }
 
 func (m *MockUserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
@@ -40,4 +41,17 @@ func (m *MockUserStore) Delete(ctx context.Context, id int64) error {
 
 func (m *MockUserStore) CheckPassword(u *User, password string) (bool, error) {
 	return false, nil
+}
+
+type MockFollowersStore struct {
+	FollowErr   error
+	UnfollowErr error
+}
+
+func (m *MockFollowersStore) FollowUser(ctx context.Context, userID, followerID int64) error {
+	return m.FollowErr
+}
+
+func (m *MockFollowersStore) UnfollowUser(ctx context.Context, userID, followerID int64) error {
+	return m.UnfollowErr
 }
